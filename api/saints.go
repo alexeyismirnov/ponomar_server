@@ -13,10 +13,6 @@ type Saint struct {
 	Name    string `json:"name"`
 }
 
-func Init() {
-	fmt.Println("qqq")
-}
-
 func GetSaints(day int, month int, year int) (saints []Saint, err error) {
 	fmt.Printf("%d %d %d\n", day, month, year)
 
@@ -29,7 +25,7 @@ func GetSaints(day int, month int, year int) (saints []Saint, err error) {
 
 	var s []Saint
 
-	if result := gdb.Where("day = ?", day).Find(&s); result.Error != nil {
+	if result := gdb.Where("day = ?", day).Order("typikon DESC").Find(&s); result.Error != nil {
 		return nil, result.Error
 	}
 

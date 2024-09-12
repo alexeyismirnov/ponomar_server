@@ -14,17 +14,8 @@ var assets embed.FS
 
 func main() {
 
-	/*
-	   rows, err := gdb.Model(&Saint{}).Rows()
-
-	   for rows.Next() {
-	        gdb.ScanRows(rows, &s)
-	        fmt.Println(s)
-	     }
-
-	*/
-
 	r := gin.Default()
+	r.Use(corsMiddleware())
 
 	r.GET("/saints/:day/:month/:year", func(c *gin.Context) {
 		day, err1 := strconv.Atoi(c.Param("day"))
@@ -50,4 +41,11 @@ func main() {
 
 	r.Run()
 
+}
+
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Next()
+	}
 }
