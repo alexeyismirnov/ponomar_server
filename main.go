@@ -2,33 +2,18 @@ package main
 
 import (
 	"embed"
-	"fmt"
-	"log"
 	"strconv"
 
+	"alexeyismirnov/ponomar_server/api"
+
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 //go:embed assets/saints/*
 var assets embed.FS
 
-type Saint struct {
-	Day     int    `json:"day"`
-	Typikon int    `json:"typikon"`
-	Name    string `json:"name"`
-}
-
 func main() {
-	dbName := "assets/saints/saints_09_ru.sqlite"
 
-	gdb, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var s []Saint
 	/*
 	   rows, err := gdb.Model(&Saint{}).Rows()
 
@@ -37,15 +22,6 @@ func main() {
 	        fmt.Println(s)
 	     }
 
-	*/
-
-	if result := gdb.Where("day = ?", 2).Find(&s); result.Error != nil {
-		log.Fatal(result.Error)
-	}
-
-	/*
-		b, err := json.Marshal(s)
-		fmt.Println(string(b))
 	*/
 
 	r := gin.Default()
@@ -60,12 +36,18 @@ func main() {
 			return
 		}
 
-		c.String(200, fmt.Sprintf("%d %d %d", day, month, year))
+		res, err := api.GetSaints(day, month, year)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.JSON(200, res)
 	})
 
 	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, s)
+		c.String(200, "pong")
 	})
+
 	r.Run()
 
 }
