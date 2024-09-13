@@ -13,7 +13,6 @@ import (
 var assets embed.FS
 
 func main() {
-
 	r := gin.Default()
 	r.Use(corsMiddleware())
 
@@ -28,6 +27,24 @@ func main() {
 		}
 
 		res, err := api.GetSaints(day, month, year)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.JSON(200, res)
+	})
+
+	r.GET("/icons/:day/:month/:year", func(c *gin.Context) {
+		day, err1 := strconv.Atoi(c.Param("day"))
+		month, err2 := strconv.Atoi(c.Param("month"))
+		year, err3 := strconv.Atoi(c.Param("year"))
+
+		if err1 != nil || err2 != nil || err3 != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+
+		res, err := api.GetIcons(day, month, year)
 		if err != nil {
 			c.AbortWithStatus(500)
 			return
