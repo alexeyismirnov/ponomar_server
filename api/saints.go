@@ -14,14 +14,9 @@ type Saint struct {
 	Name    string `json:"name"`
 }
 
-func GetSaints(day int, month int, year int) (saints []Saint, err error) {
-	fmt.Printf("%d %d %d\n", day, month, year)
-
-	// https://pkg.go.dev/time#Time.Equal
-
-	d1 := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-	fmt.Printf("Go launched at %s\n", d1.Local())
-	fmt.Printf("%t\n", IsLeapYear(year))
+func getSaintData(d time.Time) (saints []Saint, err error) {
+	day := d.Day()
+	month := int(d.Month())
 
 	dbName := fmt.Sprintf("assets/saints/saints_%02d_ru.sqlite", month)
 
@@ -30,11 +25,36 @@ func GetSaints(day int, month int, year int) (saints []Saint, err error) {
 		return nil, err
 	}
 
-	var s []Saint
+	s := []Saint{}
 
 	if result := gdb.Where("day = ?", day).Order("typikon DESC").Find(&s); result.Error != nil {
 		return nil, result.Error
 	}
 
 	return s, nil
+}
+
+func GetSaints(day int, month int, year int) (saints []Saint, err error) {
+	d := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+	leapStart := time.Date(year, time.Month(2), 29, 0, 0, 0, 0, time.UTC)
+	leapEnd := time.Date(year, time.Month(3), 13, 0, 0, 0, 0, time.UTC)
+
+	if IsLeapYear(year) {
+		if (d.Equal(leapStart) || d.After(leapStart)) && d.Before(leapEnd) {
+			return getSaintData(d.AddDate(0, 0, 1))
+		} else if d.Equal(leapEnd) {
+			return getSaintData(time.Date(year, time.Month(2), 29, 0, 0, 0, 0, time.UTC))
+		} else {
+			return getSaintData(d)
+		}
+	} else {
+		s, err := getSaintData(d)
+		if err == nil && d.Equal(leapEnd) {
+			s1, err := getSaintData(time.Date(2000, time.Month(2), 29, 0, 0, 0, 0, time.UTC))
+			return append(s, s1...), err
+		}
+
+		return s, err
+	}
+
 }

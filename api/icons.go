@@ -1,6 +1,8 @@
 package api
 
 import (
+	"time"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -10,15 +12,10 @@ type Icon struct {
 	Name string `json:"name"`
 }
 
-func GetIcons(day int, month int, year int) (saints []Icon, err error) {
-	const dbName = "assets/icons/icons.sqlite"
-
-	gdb, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
+func getIconData(gdb *gorm.DB, d time.Time) (saints []Icon, err error) {
 	var icons, link_icons []Icon
+	day := d.Day()
+	month := int(d.Month())
 
 	if result := gdb.Where("day = ? AND month = ? AND has_icon = 1", day, month).Find(&icons); result.Error != nil {
 		return nil, result.Error
@@ -35,5 +32,36 @@ func GetIcons(day int, month int, year int) (saints []Icon, err error) {
 	}
 
 	return append(icons, link_icons...), nil
+}
+
+func GetIcons(day int, month int, year int) (saints []Icon, err error) {
+	const dbName = "assets/icons/icons.sqlite"
+
+	gdb, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	d := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+	leapStart := time.Date(year, time.Month(2), 29, 0, 0, 0, 0, time.UTC)
+	leapEnd := time.Date(year, time.Month(3), 13, 0, 0, 0, 0, time.UTC)
+
+	if IsLeapYear(year) {
+		if (d.Equal(leapStart) || d.After(leapStart)) && d.Before(leapEnd) {
+			return getIconData(gdb, d.AddDate(0, 0, 1))
+		} else if d.Equal(leapEnd) {
+			return getIconData(gdb, time.Date(year, time.Month(2), 29, 0, 0, 0, 0, time.UTC))
+		} else {
+			return getIconData(gdb, d)
+		}
+	} else {
+		s, err := getIconData(gdb, d)
+		if err == nil && d.Equal(leapEnd) {
+			s1, err := getIconData(gdb, time.Date(2000, time.Month(2), 29, 0, 0, 0, 0, time.UTC))
+			return append(s, s1...), err
+		}
+
+		return s, err
+	}
 
 }
