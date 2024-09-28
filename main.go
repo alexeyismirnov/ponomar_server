@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//go:embed assets/saints/*
+//go:embed assets/*
 var assets embed.FS
 
 func main() {
