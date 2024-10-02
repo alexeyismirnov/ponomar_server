@@ -64,6 +64,18 @@ func main() {
 		c.JSON(200, res)
 	})
 
+	r.POST("/feofan", func(c *gin.Context) {
+		var params api.FeofanParams
+		c.BindJSON(&params)
+
+		res, err := api.GetFeofan(&params)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.String(200, res)
+	})
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
