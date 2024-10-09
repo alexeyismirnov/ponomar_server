@@ -76,6 +76,34 @@ func main() {
 		c.String(200, res)
 	})
 
+	r.GET("/tropsaint/:day/:month/:year", func(c *gin.Context) {
+		day, err1 := strconv.Atoi(c.Param("day"))
+		month, err2 := strconv.Atoi(c.Param("month"))
+		year, err3 := strconv.Atoi(c.Param("year"))
+
+		if err1 != nil || err2 != nil || err3 != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+
+		res, err := api.GetSaintTroparion(day, month, year)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.JSON(200, res)
+	})
+
+	r.GET("/tropfeast", func(c *gin.Context) {
+		id := c.Query("id")
+		res, err := api.GetFeastTroparion(id)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.JSON(200, res)
+	})
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})

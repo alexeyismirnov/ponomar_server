@@ -42,22 +42,22 @@ func GetIcons(day int, month int, year int) (saints []Icon, err error) {
 		return nil, err
 	}
 
-	d := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-	leapStart := time.Date(year, time.Month(2), 29, 0, 0, 0, 0, time.UTC)
-	leapEnd := time.Date(year, time.Month(3), 13, 0, 0, 0, 0, time.UTC)
+	d := DateTime(day, month, year)
+	leapStart := LeapStart(year)
+	leapEnd := LeapEnd(year)
 
 	if IsLeapYear(year) {
 		if (d.Equal(leapStart) || d.After(leapStart)) && d.Before(leapEnd) {
 			return getIconData(gdb, d.AddDate(0, 0, 1))
 		} else if d.Equal(leapEnd) {
-			return getIconData(gdb, time.Date(year, time.Month(2), 29, 0, 0, 0, 0, time.UTC))
+			return getIconData(gdb, leapStart)
 		} else {
 			return getIconData(gdb, d)
 		}
 	} else {
 		s, err := getIconData(gdb, d)
 		if err == nil && d.Equal(leapEnd) {
-			s1, err := getIconData(gdb, time.Date(2000, time.Month(2), 29, 0, 0, 0, 0, time.UTC))
+			s1, err := getIconData(gdb, LeapStart(2000))
 			return append(s, s1...), err
 		}
 
