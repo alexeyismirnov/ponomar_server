@@ -104,6 +104,16 @@ func main() {
 		c.JSON(200, res)
 	})
 
+	r.GET("/bookdata", func(c *gin.Context) {
+		filename := c.Query("filename")
+		res, err := api.GetBookData(filename)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.JSON(200, res)
+	})
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
