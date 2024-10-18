@@ -17,23 +17,14 @@ type BookData struct {
 	Items       [][]string `json:"items"`
 }
 
-type BookTitle struct {
-}
-
 func loadString(gdb *gorm.DB, key string) (value string, err error) {
-	result := map[string]interface{}{}
+	result := struct{ Value string }{}
 
-	if err := gdb.Table("data").Find(&result, "key = ?", key).Order("key"); err.Error != nil {
-		return "", err.Error
-	}
-
-	if value, ok := result["value"].(string); ok {
-		return value, nil
-
-	} else {
+	if err := gdb.Table("data").First(&result, "key = ?", key); err.Error != nil {
 		return "", nil
 	}
 
+	return result.Value, nil
 }
 
 func GetBookData(filename string) (data BookData, err error) {
@@ -74,4 +65,42 @@ func GetBookData(filename string) (data BookData, err error) {
 	})
 
 	return BookData{Title: title, Author: author, Code: code, ContentType: contentType, Sections: sec_titles, Items: item_titles}, nil
+}
+
+func GetBookContent(filename string, section int, item int) (text string, err error) {
+	dbName := fmt.Sprintf("assets/books/%s", filename)
+
+	gdb, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{
+		// Logger: logger.Default.LogMode(logger.Info),
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	result := struct{ Text string }{}
+
+	if err := gdb.Table("content").First(&result, "section = ? AND item = ?", section, item); err.Error != nil {
+		return "", err.Error
+	}
+
+	return result.Text, nil
+}
+
+func GetBookChapters(bookname string, lang string) (count int64, err error) {
+	dbName := fmt.Sprintf("assets/bible/%s_%s.sqlite", bookname, lang)
+
+	gdb, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{
+		// Logger: logger.Default.LogMode(logger.Info),
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	if err := gdb.Table("scripture").Distinct("chapter").Count(&count); err.Error != nil {
+		return 0, err.Error
+	}
+
+	return count, nil
 }

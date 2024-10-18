@@ -114,6 +114,36 @@ func main() {
 		c.JSON(200, res)
 	})
 
+	r.GET("/bookcontent", func(c *gin.Context) {
+		filename := c.Query("filename")
+		section, err1 := strconv.Atoi(c.Query("section"))
+		item, err2 := strconv.Atoi(c.Query("item"))
+
+		if err1 != nil || err2 != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+
+		res, err := api.GetBookContent(filename, section, item)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.String(200, res)
+	})
+
+	r.GET("/bookchapters", func(c *gin.Context) {
+		bookname := c.Query("bookname")
+		lang := c.Query("lang")
+
+		count, err := api.GetBookChapters(bookname, lang)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.String(200, strconv.FormatInt(count, 10))
+	})
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
